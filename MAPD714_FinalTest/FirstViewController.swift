@@ -18,6 +18,7 @@ class FirstViewController: UIViewController
     @IBOutlet weak var weightTextField: UITextField!
     @IBOutlet weak var heightTextFeild: UITextField!
     
+    @IBOutlet weak var Switch: UISwitch!
     
     @IBOutlet weak var label: UILabel!
     @IBOutlet weak var submitButton: UIButton!
@@ -110,23 +111,131 @@ class FirstViewController: UIViewController
     
     @IBAction func SubmitTapped(_ sender: UIButton)
     {
-        let Name = nameTextField.text!
-        let Gender = genderTextField.text!
-        let Age = ageTextField.text!
-        let Weight = Double(weightTextField.text!)
-        let Height = Double(heightTextFeild.text!)
-        
-        let db = Firestore.firestore()
-        
-        db.collection("users").addDocument(data: ["Name": Name, "Gender": Gender, "Age": Age, "Weight": Weight, "Height": Height ]) { (error) in
+            var Name = nameTextField.text!
+            var Age = ageTextField.text!
+            var Gender = genderTextField.text!
+            var Weight = weightTextField.text!
+            var Height = heightTextFeild.text!
             
-            if error != nil
-            {
-               // self.showError("Data can not be added")
+            var db = Firestore.firestore()
+            if(Switch.isOn){
+                var  data =  [
+                    "name": Name,
+                    "age": Age,
+                    "gender": Gender,
+                    "weight" : Weight+"pd",
+                    "height" : Height+"in"]
+                
+                db.collection("BMI").document("Values").setData(data) { err in
+                    if let err = err {
+                        print("Error writing document: \(err)")
+                    } else {
+                        var wei = Double(Weight)
+                        var hei = Double(Height)
+                        var finalval = Double(wei!*703/(hei!*hei!))
+                        let date = Date()
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "dd.MM.yyyy"
+                        let result = formatter.string(from: date)
+                        var timestamp = String(Int64(Date().timeIntervalSince1970*1000))
+                        
+                        db.collection("Track").document(timestamp).setData([
+                            "date": result,
+                            "weight" : Weight+"pd",
+                            "height" : Height+"in",
+                            "bmi" : ""+String (format: "%.\(3)f",finalval)+" pd/in2",
+                            "timestamp" : timestamp
+                        ]) { err in
+                            if let err = err {
+                                print("Error writing document: \(err)")
+                                
+                            }else{
+                                self.BMIValue.text = String(finalval)
+                                
+                            }
+                            
+                            
+                            
+                        }
+                    }
+                }
             }
-        
+            else{
+                var  data =  [
+                    "name": Name,
+                    "age": Age,
+                    "gender": Gender,
+                    "weight" : Weight+"kg",
+                    "height" : Height+"m"]
+                
+                db.collection("BMI").document("Values").setData(data) { err in
+                    if let err = err {
+                        print("Error writing document: \(err)")
+                    } else {
+                        var wei = Double(Weight)
+                        var hei = Double(Height)
+                        var finalval = Double(wei!/(hei!*hei!))
+                        let date = Date()
+                        let formatter = DateFormatter()
+                        formatter.dateFormat = "dd.MM.yyyy"
+                        let result = formatter.string(from: date)
+                        var timestamp = String(Int64(Date().timeIntervalSince1970*1000))
+                        
+                        db.collection("Track").document(timestamp).setData([
+                            "date": result,
+                            "weight" : Weight+"kg",
+                            "height" : Height+"m",
+                            "bmi" : ""+String (format: "%.\(3)f",finalval)+" kg/m2",
+                            "timestamp" : timestamp
+                        ]) { err in
+                            if let err = err {
+                                print("Error writing document: \(err)")
+                                
+                            }else{
+                                self.label.text = "Metric Units"
+               
+                                            
+               
+               if finalval<16
+               {
+                   self.BMIMessage.text = "Severe Thinness"
+               }
+               else if finalval>16 && finalval<17
+               {
+                   self.BMIMessage.text = "Moderate Thinness"
+               }
+               else if finalval>17 && finalval<18
+               {
+                  self.BMIMessage.text = "Mild Thinness"
+               }
+               else if finalval>18 && finalval<25
+               {
+                   self.BMIMessage.text = "Normal"
+               }
+               else if finalval>25 && finalval<30
+               {
+                   self.BMIMessage.text = "Overweight"
+               }
+               else if finalval>30 && finalval<35
+               {
+                   self.BMIMessage.text = "Overweight class 1"
+               }
+               else if finalval>35 && finalval<40
+               {
+                self.BMIMessage.text = "Overweight Class 2"
+               }
+               else if finalval>40
+               {
+                self.BMIMessage.text = "Overweight Class 3"
+               }
+           }
+           
+                                
+                            }
+                        }
+                    }
+                }
+            }
         }
-        
-    }
     
-}
+
